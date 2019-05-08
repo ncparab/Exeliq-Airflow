@@ -1,6 +1,6 @@
-#################################
-Airflow Installation with Docker
-#################################
+####################################
+Airflow with Celery-Rabbitmq-Docker
+####################################
 
 In this document we will learn to install ``Apache Airflow`` with the help of Dockerfile.
 
@@ -167,3 +167,16 @@ Build Airflow Image
    :width: 300px
    :height: 200px
    :alt: alternate text
+
+- Login to rabbitmq broker in browser
+
+.. image:: images/rabbitmqlogin.png
+   :width: 300px
+   :height: 200px
+   :alt: alternate text
+   
+.. image:: images/rabbitmqconsole.png
+   :width: 300px
+   :height: 200px
+   :alt: alternate text
+
