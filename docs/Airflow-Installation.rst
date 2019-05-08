@@ -139,7 +139,7 @@ Build Airflow Image
    
    $ docker images
    
-.. image:: images/dockerimages.png
+.. image:: images/dockerimages_new.png
    :width: 300px
    :height: 200px
    :alt: alternate text
