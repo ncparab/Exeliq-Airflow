@@ -152,7 +152,7 @@ Build Airflow Image
    
    $ /bin/entrypoint.sh     #Inside docker container
    
-.. image:: images/dockerrun.png
+.. image:: images/dockerrun1.png
    :width: 300px
    :height: 200px
    :alt: alternate text
