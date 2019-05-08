@@ -177,6 +177,6 @@ Build Airflow Image
    
 .. image:: images/rabbitmqconsole.png
    :width: 300px
-   :height: 200px
+   :height: 200px 
    :alt: alternate text
 
