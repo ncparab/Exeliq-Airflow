@@ -60,7 +60,9 @@ In some cases, the user will interact with the web server. He can manually trigg
 
 Celeryd processes, controlled by workers, periodically pull from the queuing service. When a celeryd process pulls a task message, it updates the task instance in the metastore to a running state and begins executing the code provided. When the task ends (in a success or fail state) it updates the state of the task.
 
-Initializing Database Backend 
+Initializing Database Backend
+-------------------------------
+
 Airflow Concepts
 ------------------------
 
