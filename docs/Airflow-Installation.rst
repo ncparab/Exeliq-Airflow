@@ -212,6 +212,7 @@ postgresql.ini
       user=root
 
 rabbitmq.ini
+-------------
 
 .. code-block:: bash
 
