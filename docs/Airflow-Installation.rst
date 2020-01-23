@@ -98,8 +98,6 @@ Docker can build images automatically by reading the instructions from a Dockerf
        && pip install Werkzeug>=0.15 \ 
        && pip install flask==1.0.0 
  
- 
- 
     # Installation and configuration of Postgresql 
    RUN su - postgres -c "/usr/bin/initdb" 
     RUN echo  "host all  all    0.0.0.0/0  md5" >>/var/lib/pgsql/data/pg_hba.conf 
@@ -160,6 +158,232 @@ Docker can build images automatically by reading the instructions from a Dockerf
    #USER airflow 
    #WORKDIR ${AIRFLOW_HOME} 
    CMD "/bin/entrypoint.sh" 
+   
+ 
+ airflow.ini
+ -----------
+ 
+ .. code-block:: bash
+
+      [program:airflow-webserver]
+      command=su - airflow -c "airflow webserver"
+      directory=/usr/local/airflow
+      autostart=true
+      autorestart=true
+      startretries=3
+      stderr_logfile=/usr/local/airflow/logs/webserver.err.log
+      stdout_logfile=/usr/local/airflow/logs/webserver.log
+      user=root
+
+      [program:airflow-sch]
+      command=su - airflow -c "airflow scheduler" 
+      directory=/usr/local/airflow
+      autostart=true
+      autorestart=true
+      startretries=3
+      stderr_logfile=/usr/local/airflow/logs/scheduler.err.log
+      stdout_logfile=/usr/local/airflow/logs/scheduler.log
+      user=root
+
+      [program:airflow-worker]
+      command=su - airflow -c "airflow worker" 
+      directory=/usr/local/airflow
+      autostart=true
+      autorestart=true
+      startretries=3
+      stderr_logfile=/usr/local/airflow/logs/worker.err.log
+      stdout_logfile=/usr/local/airflow/logs/worker.log
+      user=root
+
+postgresql.ini
+--------------
+
+.. code-block:: bash
+
+      [program:postgresql]
+      command=su - postgres -c "postmaster"
+      #command=su - postgres -c " /usr/bin/pg_ctl -D /var/lib/pgsql/data -l logfile "
+      directory=/var/lib/pgsql/data
+      autostart=true
+      autorestart=true
+      startretries=3
+      stderr_logfile=/var/lib/pgsql/data/postgres_error.log
+      stdout_logfile=/var/lib/pgsql/data/postgres.log
+      user=root
+
+rabbitmq.ini
+
+.. code-block:: bash
+
+   [program:rabbitmq]
+   command=rabbitmq-server
+   #command=su - postgres -c " /usr/bin/pg_ctl -D /var/lib/pgsql/data -l logfile "
+   directory=/var/lib/pgsql/data
+   autostart=true
+   autorestart=true
+   startretries=3
+   stderr_logfile=/usr/local/airflow/rabbitmq_error.log
+   stdout_logfile=/usr/local/airflow//rabbbitmq.log
+   user=root
+
+supervisord.conf
+----------------
+
+.. code-block:: bash
+
+      ; Sample supervisor config file.
+
+      [unix_http_server]
+      file=/var/run/supervisor/supervisor.sock   ; (the path to the socket file)
+      ;chmod=0700                 ; sockef file mode (default 0700)
+      ;chown=nobody:nogroup       ; socket file uid:gid owner
+      ;username=user              ; (default is no username (open server))
+      ;password=123               ; (default is no password (open server))
+
+      ;[inet_http_server]         ; inet (TCP) server disabled by default
+      ;port=127.0.0.1:9001        ; (ip_address:port specifier, *:port for all iface)
+      ;username=user              ; (default is no username (open server))
+      ;password=123               ; (default is no password (open server))
+
+      [supervisord]
+      logfile=/var/log/supervisor/supervisord.log  ; (main log file;default $CWD/supervisord.log)
+      logfile_maxbytes=50MB       ; (max main logfile bytes b4 rotation;default 50MB)
+      logfile_backups=10          ; (num of main logfile rotation backups;default 10)
+      loglevel=info               ; (log level;default info; others: debug,warn,trace)
+      pidfile=/var/run/supervisord.pid ; (supervisord pidfile;default supervisord.pid)
+      nodaemon=false              ; (start in foreground if true;default false)
+      minfds=1024                 ; (min. avail startup file descriptors;default 1024)
+      minprocs=200                ; (min. avail process descriptors;default 200)
+      ;umask=022                  ; (process file creation umask;default 022)
+      ;user=chrism                 ; (default is current user, required if root)
+      ;identifier=supervisor       ; (supervisord identifier, default is 'supervisor')
+      ;directory=/tmp              ; (default is not to cd during start)
+      ;nocleanup=true              ; (don't clean up tempfiles at start;default false)
+      ;childlogdir=/tmp            ; ('AUTO' child log dir, default $TEMP)
+      ;environment=KEY=value       ; (key value pairs to add to environment)
+      ;strip_ansi=false            ; (strip ansi escape codes in logs; def. false)
+
+      ; the below section must remain in the config file for RPC
+      ; (supervisorctl/web interface) to work, additional interfaces may be
+      ; added by defining them in separate rpcinterface: sections
+      [rpcinterface:supervisor]
+      supervisor.rpcinterface_factory = supervisor.rpcinterface:make_main_rpcinterface
+
+      [supervisorctl]
+      serverurl=unix:///var/run/supervisor/supervisor.sock ; use a unix:// URL  for a unix socket
+      ;serverurl=http://127.0.0.1:9001 ; use an http:// url to specify an inet socket
+      ;username=chris              ; should be same as http_username if set
+      ;password=123                ; should be same as http_password if set
+      ;prompt=mysupervisor         ; cmd line prompt (default "supervisor")
+      ;history_file=~/.sc_history  ; use readline history if available
+
+      ; The below sample program section shows all possible program subsection values,
+      ; create one or more 'real' program: sections to be able to control them under
+      ; supervisor.
+
+      ;[program:theprogramname]
+      ;command=/bin/cat              ; the program (relative uses PATH, can take args)
+      ;process_name=%(program_name)s ; process_name expr (default %(program_name)s)
+      ;numprocs=1                    ; number of processes copies to start (def 1)
+      ;directory=/tmp                ; directory to cwd to before exec (def no cwd)
+      ;umask=022                     ; umask for process (default None)
+      ;priority=999                  ; the relative start priority (default 999)
+      ;autostart=true                ; start at supervisord start (default: true)
+      ;autorestart=true              ; retstart at unexpected quit (default: true)
+      ;startsecs=10                  ; number of secs prog must stay running (def. 1)
+      ;startretries=3                ; max # of serial start failures (default 3)
+      ;exitcodes=0,2                 ; 'expected' exit codes for process (default 0,2)
+      ;stopsignal=QUIT               ; signal used to kill process (default TERM)
+      ;stopwaitsecs=10               ; max num secs to wait b4 SIGKILL (default 10)
+      ;user=chrism                   ; setuid to this UNIX account to run the program
+      ;redirect_stderr=true          ; redirect proc stderr to stdout (default false)
+      ;stdout_logfile=/a/path        ; stdout log path, NONE for none; default AUTO
+      ;stdout_logfile_maxbytes=1MB   ; max # logfile bytes b4 rotation (default 50MB)
+      ;stdout_logfile_backups=10     ; # of stdout logfile backups (default 10)
+      ;stdout_capture_maxbytes=1MB   ; number of bytes in 'capturemode' (default 0)
+      ;stdout_events_enabled=false   ; emit events on stdout writes (default false)
+      ;stderr_logfile=/a/path        ; stderr log path, NONE for none; default AUTO
+      ;stderr_logfile_maxbytes=1MB   ; max # logfile bytes b4 rotation (default 50MB)
+      ;stderr_logfile_backups=10     ; # of stderr logfile backups (default 10)
+      ;stderr_capture_maxbytes=1MB   ; number of bytes in 'capturemode' (default 0)
+      ;stderr_events_enabled=false   ; emit events on stderr writes (default false)
+      ;environment=A=1,B=2           ; process environment additions (def no adds)
+      ;serverurl=AUTO                ; override serverurl computation (childutils)
+
+      ; The below sample eventlistener section shows all possible
+      ; eventlistener subsection values, create one or more 'real'
+      ; eventlistener: sections to be able to handle event notifications
+      ; sent by supervisor.
+
+      ;[eventlistener:theeventlistenername]
+      ;command=/bin/eventlistener    ; the program (relative uses PATH, can take args)
+      ;process_name=%(program_name)s ; process_name expr (default %(program_name)s)
+      ;numprocs=1                    ; number of processes copies to start (def 1)
+      ;events=EVENT                  ; event notif. types to subscribe to (req'd)
+      ;buffer_size=10                ; event buffer queue size (default 10)
+      ;directory=/tmp                ; directory to cwd to before exec (def no cwd)
+      ;umask=022                     ; umask for process (default None)
+      ;priority=-1                   ; the relative start priority (default -1)
+      ;autostart=true                ; start at supervisord start (default: true)
+      ;autorestart=unexpected        ; restart at unexpected quit (default: unexpected)
+      ;startsecs=10                  ; number of secs prog must stay running (def. 1)
+      ;startretries=3                ; max # of serial start failures (default 3)
+      ;exitcodes=0,2                 ; 'expected' exit codes for process (default 0,2)
+      ;stopsignal=QUIT               ; signal used to kill process (default TERM)
+      ;stopwaitsecs=10               ; max num secs to wait b4 SIGKILL (default 10)
+      ;user=chrism                   ; setuid to this UNIX account to run the program
+      ;redirect_stderr=true          ; redirect proc stderr to stdout (default false)
+      ;stdout_logfile=/a/path        ; stdout log path, NONE for none; default AUTO
+      ;stdout_logfile_maxbytes=1MB   ; max # logfile bytes b4 rotation (default 50MB)
+      ;stdout_logfile_backups=10     ; # of stdout logfile backups (default 10)
+      ;stdout_events_enabled=false   ; emit events on stdout writes (default false)
+      ;stderr_logfile=/a/path        ; stderr log path, NONE for none; default AUTO
+      ;stderr_logfile_maxbytes=1MB   ; max # logfile bytes b4 rotation (default 50MB)
+      ;stderr_logfile_backups        ; # of stderr logfile backups (default 10)
+      ;stderr_events_enabled=false   ; emit events on stderr writes (default false)
+      ;environment=A=1,B=2           ; process environment additions
+      ;serverurl=AUTO                ; override serverurl computation (childutils)
+
+      ; The below sample group section shows all possible group values,
+      ; create one or more 'real' group: sections to create "heterogeneous"
+      ; process groups.
+
+      ;[group:thegroupname]
+      ;programs=progname1,progname2  ; each refers to 'x' in [program:x] definitions
+      ;priority=999                  ; the relative start priority (default 999)
+
+      ; The [include] section can just contain the "files" setting.  This
+      ; setting can list multiple files (separated by whitespace or
+      ; newlines).  It can also contain wildcards.  The filenames are
+      ; interpreted as relative to this file.  Included files *cannot*
+      ; include files themselves.
+
+      [include]
+      files = supervisord.d/*.ini
+
+
+entrypoint.sh
+-------------
+
+.. code-block:: bash
+
+      su - postgres -c " /usr/bin/pg_ctl -D /var/lib/pgsql/data -l logfile start"
+      sleep 10
+      su - postgres -c "psql --command \"CREATE USER airflow WITH SUPERUSER PASSWORD 'airflow';\""
+      su - postgres -c "createdb -O airflow airflow"
+      su - airflow -c "airflow initdb"
+      su - postgres -c " /usr/bin/pg_ctl -D /var/lib/pgsql/data -l logfile stop"
+      rabbitmq-server&
+      sleep 10
+      rabbitmq-plugins enable  rabbitmq_web_mqtt rabbitmq_web_mqtt_examples rabbitmq_web_stomp rabbitmq_web_stomp_examples                      rabbitmq_trust_store rabbitmq_top rabbitmq_management_agent rabbitmq_management rabbitmq_jms_topic_exchange rabbitmq_amqp1_0
+      sleep 5
+      rabbitmqadmin.py  declare user name=airflow  password=airflow  tags=administrator
+      rabbitmqadmin.py  declare queue name=airflow
+      rabbitmqadmin.py  declare permission vhost=/ user=airflow configure=.* write=.* read=.
+      rabbitmqctl stop
+      supervisord -c /etc/supervisord.conf
+      sleep 5
+      supervisorctl status
 
 Build Airflow Image
 --------------------
