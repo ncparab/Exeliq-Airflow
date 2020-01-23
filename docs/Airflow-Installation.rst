@@ -158,12 +158,12 @@ Docker can build images automatically by reading the instructions from a Dockerf
    #USER airflow 
    #WORKDIR ${AIRFLOW_HOME} 
    CMD "/bin/entrypoint.sh" 
-   
+
+
+airflow.ini
+-------------
  
- airflow.ini
- -----------
- 
- .. code-block:: bash
+.. code-block:: bash
 
       [program:airflow-webserver]
       command=su - airflow -c "airflow webserver"
